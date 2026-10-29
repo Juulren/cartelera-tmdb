@@ -2,7 +2,8 @@ import express from 'express';
 
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const LANGUAGE = 'es-MX';
-const PORT = process.env.PORT || 3001;
+// Variable propia (no PORT) para no chocar con la que definen otras herramientas.
+const PORT = process.env.API_PORT || 3001;
 const TIMEOUT_MS = 8000;
 
 const rawKey = process.env.TMDB_API_KEY;
@@ -81,4 +82,11 @@ app.get('/api/movie/:id', (req, res) => {
   tmdb(res, `/movie/${req.params.id}`);
 });
 
-app.listen(PORT, () => console.log(`[server] API proxy en http://localhost:${PORT}`));
+const server = app.listen(PORT, () =>
+  console.log(`[server] API proxy en http://localhost:${PORT}`)
+);
+// Si el puerto está ocupado, avisar y salir en vez de fingir que arrancó.
+server.on('error', (err) => {
+  console.error(`[server] No se pudo abrir el puerto ${PORT}: ${err.message}`);
+  process.exit(1);
+});

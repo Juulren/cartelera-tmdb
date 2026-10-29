@@ -1,6 +1,11 @@
 # Cartelera
 
-Aplicación web pequeña para explorar películas con la API de [TMDB](https://www.themoviedb.org/): muestra las populares, permite buscar por título, cargar más resultados y ver el detalle de cada película (póster, sinopsis, géneros, duración y calificación). Todo en español (`es-MX`).
+Aplicación web para explorar películas con la API de [TMDB](https://www.themoviedb.org/), en español (`es-MX`). Tiene dos secciones:
+
+- **Populares:** una selección corta (una portada destacada y 11 películas) para descubrir qué ver ahora.
+- **Catálogo:** todas las películas, con un buscador avanzado: texto, géneros (varios a la vez), año, calificación mínima y orden (populares, mejor calificadas, más recientes o más antiguas). Paginado con «Cargar más».
+
+Desde cualquier tarjeta se abre el detalle (póster, sinopsis, géneros, duración y calificación).
 
 Proyecto de la **Tarea 2** (consumo de una API externa).
 
@@ -67,16 +72,22 @@ El proxy escucha en el puerto 3001 (`API_PORT` lo cambia) y Vite reenvía `/api`
 | Key inválida o ausente | Mensaje que indica revisar el `.env` |
 | Timeout (8 s) o servidor caído | "El servicio no está respondiendo" y botón Reintentar |
 
+## Cómo funcionan los filtros
+
+Sin texto, el catálogo usa `/discover/movie` de TMDB, que filtra y ordena en el servidor de TMDB (por eso funciona sobre todo el catálogo). La búsqueda por texto usa `/search/movie`, que solo acepta el año; con texto, el género, la calificación y el orden se aplican sobre los resultados ya cargados, y la app lo avisa en pantalla.
+
 Si el usuario escribe rápido, las peticiones anteriores se cancelan para que no lleguen resultados viejos.
 
 ## Estructura
 
 ```
-server/index.js          Proxy Express: /api/popular, /api/search, /api/movie/:id
+server/index.js          Proxy Express: /api/popular, /api/search, /api/discover, /api/movie/:id
 src/api/movies.js        Cliente de la API, timeout y errores tipificados (ApiError)
 src/hooks.js             useDebounce, useOnlineStatus, useCountdown
-src/components/          SearchBar, MovieGrid, MovieCard, MovieDetail (modal), StatusMessage
-src/App.jsx              Estado principal: búsqueda, paginación y errores
+src/components/          FilterBar, SearchBar, Hero, MovieGrid, MovieCard, MovieDetail (modal), StatusMessage
+src/App.jsx              Barra superior, pestañas (hash #populares / #catalogo) y modal
+src/views/               PopularView (selección corta) y CatalogView (catálogo con filtros)
+src/usePagedMovies.js    Hook compartido: paginación, cancelación, reintentos y errores
 ```
 
 ## Declaración de uso de IA

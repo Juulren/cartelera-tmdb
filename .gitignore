@@ -1,0 +1,13 @@
+node_modules/
+dist/
+
+# Variables de entorno: aquí vive la API key, nunca se sube
+.env
+.env.*
+!.env.example
+
+# Configuración local de Claude Code
+.claude/
+
+*.log
+.DS_Store

@@ -52,3 +52,7 @@ export function getPopular(page = 1, signal) {
 export function searchMovies(query, page = 1, signal) {
   return getJson(`/api/search?query=${encodeURIComponent(query)}&page=${page}`, signal);
 }
+
+export function getMovie(id, signal) {
+  return getJson(`/api/movie/${id}`, signal);
+}

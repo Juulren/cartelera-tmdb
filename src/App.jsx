@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getPopular, searchMovies } from './api/movies.js';
 import { useDebounce, useOnlineStatus } from './hooks.js';
+import MovieDetail from './components/MovieDetail.jsx';
 import MovieGrid from './components/MovieGrid.jsx';
 import SearchBar from './components/SearchBar.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
@@ -9,6 +10,7 @@ export default function App() {
   const [input, setInput] = useState('');
   const query = useDebounce(input.trim(), 400);
   const online = useOnlineStatus();
+  const [selectedId, setSelectedId] = useState(null);
 
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
@@ -92,7 +94,7 @@ export default function App() {
       </header>
 
       {loading && <StatusMessage kind="loading">Cargando películas…</StatusMessage>}
-      {!loading && movies.length > 0 && <MovieGrid movies={movies} />}
+      {!loading && movies.length > 0 && <MovieGrid movies={movies} onSelect={setSelectedId} />}
       {failure && (
         <StatusMessage kind="error" onRetry={retry} retryAfter={failure.err.retryAfter}>
           {failure.err.message}
@@ -106,6 +108,7 @@ export default function App() {
           {loadingMore ? 'Cargando…' : 'Cargar más'}
         </button>
       )}
+      {selectedId && <MovieDetail id={selectedId} onClose={() => setSelectedId(null)} />}
     </main>
   );
 }

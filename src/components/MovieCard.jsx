@@ -1,10 +1,10 @@
 import { IMG_BASE } from '../api/movies.js';
 
-export default function MovieCard({ movie }) {
+export default function MovieCard({ movie, onSelect }) {
   const year = movie.release_date?.slice(0, 4);
 
   return (
-    <article className="card">
+    <button type="button" className="card" onClick={() => onSelect(movie.id)}>
       {movie.poster_path ? (
         <img
           src={`${IMG_BASE}/w342${movie.poster_path}`}
@@ -20,6 +20,6 @@ export default function MovieCard({ movie }) {
           {year || 'Sin fecha'} · ★ {movie.vote_average ? movie.vote_average.toFixed(1) : '—'}
         </p>
       </div>
-    </article>
+    </button>
   );
 }

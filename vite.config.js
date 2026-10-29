@@ -5,6 +5,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     // En desarrollo, /api se reenvía al proxy Express (donde vive la key).
-    proxy: { '/api': 'http://localhost:3001' },
+    proxy: { '/api': `http://localhost:${process.env.API_PORT || 3001}` },
   },
 });

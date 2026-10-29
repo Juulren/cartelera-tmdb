@@ -45,12 +45,30 @@ async function getJson(path, signal) {
   return body;
 }
 
-export function getPopular(page = 1, signal) {
-  return getJson(`/api/popular?page=${page}`, signal);
+// Arma la query ignorando los valores vacíos.
+function qs(params) {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== '') q.set(k, v);
+  }
+  return q.toString();
 }
 
-export function searchMovies(query, page = 1, signal) {
-  return getJson(`/api/search?query=${encodeURIComponent(query)}&page=${page}`, signal);
+export function getPopular(page = 1, signal) {
+  return getJson(`/api/popular?${qs({ page })}`, signal);
+}
+
+export function searchMovies(query, page = 1, signal, year) {
+  return getJson(`/api/search?${qs({ query, page, year })}`, signal);
+}
+
+// filtros: { genres: number[], year, minRating, sort }
+export function discoverMovies(filters, page = 1, signal) {
+  const { genres = [], year, minRating, sort } = filters;
+  return getJson(
+    `/api/discover?${qs({ page, genres: genres.join(','), year, min_rating: minRating, sort_by: sort })}`,
+    signal
+  );
 }
 
 export function getMovie(id, signal) {

@@ -22,3 +22,8 @@ export const GENRES = {
 };
 
 export const genreName = (ids = []) => GENRES[ids[0]] ?? null;
+
+// Para los filtros: lista ordenada alfabéticamente.
+export const GENRE_LIST = Object.entries(GENRES)
+  .map(([id, name]) => ({ id: Number(id), name }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'es'));

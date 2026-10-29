@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getPopular, searchMovies } from './api/movies.js';
-import { useDebounce } from './hooks.js';
+import { useDebounce, useOnlineStatus } from './hooks.js';
 import MovieGrid from './components/MovieGrid.jsx';
 import SearchBar from './components/SearchBar.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
@@ -8,13 +8,15 @@ import StatusMessage from './components/StatusMessage.jsx';
 export default function App() {
   const [input, setInput] = useState('');
   const query = useDebounce(input.trim(), 400);
+  const online = useOnlineStatus();
 
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState(null);
+  // { err, where }: where indica qué reintentar ('load' = primera página, 'more' = siguiente)
+  const [failure, setFailure] = useState(null);
 
   const fetchPage = useCallback(
     (p, signal) => (query ? searchMovies(query, p, signal) : getPopular(p, signal)),
@@ -25,7 +27,7 @@ export default function App() {
   const load = useCallback(
     async (signal) => {
       setLoading(true);
-      setError(null);
+      setFailure(null);
       try {
         const data = await fetchPage(1, signal);
         setMovies(data.results);
@@ -34,7 +36,7 @@ export default function App() {
       } catch (err) {
         if (signal?.aborted) return; // petición cancelada por una búsqueda más nueva
         setMovies([]);
-        setError(err.message);
+        setFailure({ err, where: 'load' });
       } finally {
         if (!signal?.aborted) setLoading(false);
       }
@@ -48,24 +50,41 @@ export default function App() {
     return () => controller.abort();
   }, [load]);
 
-  async function loadMore() {
+  const loadMore = useCallback(async () => {
     setLoadingMore(true);
+    setFailure(null);
     try {
       const data = await fetchPage(page + 1);
       setMovies((prev) => [...prev, ...data.results]);
       setPage(page + 1);
       setTotalPages(data.total_pages);
     } catch (err) {
-      setError(err.message);
+      setFailure({ err, where: 'more' });
     } finally {
       setLoadingMore(false);
     }
-  }
+  }, [fetchPage, page]);
+
+  const retry = useCallback(
+    () => (failure?.where === 'more' ? loadMore() : load()),
+    [failure, load, loadMore]
+  );
+
+  // Si volvió la conexión y había fallado por falta de red, reintentar solo.
+  useEffect(() => {
+    if (online && failure && ['offline', 'network'].includes(failure.err.code)) retry();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   const title = query ? `Resultados para «${query}»` : 'Películas populares';
 
   return (
     <main className="app">
+      {!online && (
+        <div className="banner" role="alert">
+          Sin conexión. Se reintentará solo cuando vuelva la red.
+        </div>
+      )}
       <header>
         <h1>Cartelera</h1>
         <SearchBar value={input} onChange={setInput} />
@@ -73,16 +92,16 @@ export default function App() {
       </header>
 
       {loading && <StatusMessage kind="loading">Cargando películas…</StatusMessage>}
-      {error && (
-        <StatusMessage kind="error" onRetry={() => load()}>
-          {error}
+      {!loading && movies.length > 0 && <MovieGrid movies={movies} />}
+      {failure && (
+        <StatusMessage kind="error" onRetry={retry} retryAfter={failure.err.retryAfter}>
+          {failure.err.message}
         </StatusMessage>
       )}
-      {!loading && !error && movies.length === 0 && (
+      {!loading && !failure && movies.length === 0 && (
         <StatusMessage kind="empty">No se encontraron películas para «{query}».</StatusMessage>
       )}
-      {!loading && movies.length > 0 && <MovieGrid movies={movies} />}
-      {!loading && !error && page < totalPages && (
+      {!loading && !failure && page < totalPages && (
         <button type="button" className="more" onClick={loadMore} disabled={loadingMore}>
           {loadingMore ? 'Cargando…' : 'Cargar más'}
         </button>

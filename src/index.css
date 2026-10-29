@@ -73,3 +73,11 @@ body {
   margin: 24px auto;
   padding: 10px 20px;
 }
+
+.banner {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: #fff3cd;
+  color: #664d03;
+  border: 1px solid #ffe69c;
+}

@@ -9,6 +9,12 @@ Desde cualquier tarjeta se abre el detalle (póster, sinopsis, géneros, duraci�
 
 Proyecto de la **Tarea 2** (consumo de una API externa).
 
+## Capturas
+
+![Sección Populares: portada destacada y selección corta.](docs/captura-populares.png)
+
+![Sección Catálogo: buscador avanzado con filtros y resultados.](docs/captura-catalogo.png)
+
 ## Tecnologías
 
 - **Frontend:** React 18 + Vite
@@ -98,18 +104,19 @@ src/usePagedMovies.js    Hook compartido: paginación, cancelación, reintentos 
 
 | Herramienta | Para qué la usé |
 |---|---|
-| Claude Code (modelos Claude de Anthropic) | Planear la arquitectura, generar el código del proxy y de los componentes, depurar errores (por ejemplo, el conflicto con la variable `PORT`), probar la app en el navegador y redactar este README |
-
-<!-- COMPLETA: agrega aquí cualquier otra herramienta que hayas usado de verdad
-     (ChatGPT, Copilot, Cursor, Codespaces…) y para qué. Borra este comentario. -->
+| Claude Code (modelos Claude de Anthropic) | Planear la arquitectura; generar el código del proxy Express y de los componentes de React; depurar errores (conflicto con la variable PORT, procesos viejos en el puerto); probar la app en el navegador; rediseñar la interfaz; redactar el README, la bitácora y los mensajes de commit. |
 
 ### Qué hice yo sin ayuda de IA
 
-<!-- COMPLETA con lo que sea cierto, por ejemplo: crear la cuenta de TMDB y obtener la
-     key, crear el repositorio, hacer las pruebas manuales, grabar la demo.
-     Recuerda: debes poder explicar cualquier línea del código. Borra este comentario. -->
+- Crear mi cuenta de TMDB y obtener la API key, y guardarla en mi archivo .env (nunca se sube al repositorio).
+- Crear el repositorio en GitHub.
+- Decidir el tema y el alcance: una app de películas con TMDB, con una sección Populares corta y un Catálogo completo con buscador avanzado.
+- Probar la app a mano, detectar los fallos ("Cargar más" y "No se pudo contactar al servidor") y reportarlos; reiniciar el servidor cuando hizo falta.
+- Revisar el diseño y pedir los cambios (más vida visual; separar Populares del Catálogo).
 
-Los detalles de los prompts, los errores de la IA y lo aprendido están en [`BITACORA.md`](BITACORA.md).
+Debo poder explicar cualquier línea del código; lo que no pueda explicar no cuenta como mío.
+
+Los prompts, los errores de la IA y lo aprendido están en [`BITACORA.md`](BITACORA.md) y, en Word, en [`docs/Bitacora-IA-Cartelera.docx`](docs/Bitacora-IA-Cartelera.docx).
 
 ## Créditos
 

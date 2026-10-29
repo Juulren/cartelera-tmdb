@@ -12,3 +12,37 @@ body {
   margin: 0 auto;
   padding: 16px;
 }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.card img,
+.card__noposter {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.card__noposter {
+  display: grid;
+  place-items: center;
+  background: #ddd;
+}
+
+.card h2 {
+  font-size: 1rem;
+  margin: 8px 0 4px;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.status {
+  padding: 16px;
+}

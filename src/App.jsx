@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getPopular, searchMovies } from './api/movies.js';
 import { useDebounce, useOnlineStatus } from './hooks.js';
+import Hero from './components/Hero.jsx';
 import MovieDetail from './components/MovieDetail.jsx';
 import MovieGrid from './components/MovieGrid.jsx';
 import SearchBar from './components/SearchBar.jsx';
+import SkeletonGrid from './components/SkeletonGrid.jsx';
 import StatusMessage from './components/StatusMessage.jsx';
 
 export default function App() {
@@ -78,37 +80,67 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [online]);
 
-  const title = query ? `Resultados para «${query}»` : 'Películas populares';
+  const title = query ? `Resultados para «${query}»` : 'Populares ahora';
+
+  // La portada destaca la primera película con imagen de fondo; no se repite en la rejilla.
+  const featured = !query && !failure ? movies.find((m) => m.backdrop_path) : null;
+  const gridMovies = featured ? movies.filter((m) => m.id !== featured.id) : movies;
 
   return (
-    <main className="app">
+    <>
+      <header className="topbar">
+        <div className="topbar__inner">
+          <h1 className="brand">Cartelera</h1>
+          <SearchBar value={input} onChange={setInput} />
+        </div>
+      </header>
+
       {!online && (
         <div className="banner" role="alert">
           Sin conexión. Se reintentará solo cuando vuelva la red.
         </div>
       )}
-      <header>
-        <h1>Cartelera</h1>
-        <SearchBar value={input} onChange={setInput} />
-        <h2 className="section-title">{title}</h2>
-      </header>
 
-      {loading && <StatusMessage kind="loading">Cargando películas…</StatusMessage>}
-      {!loading && movies.length > 0 && <MovieGrid movies={movies} onSelect={setSelectedId} />}
-      {failure && (
-        <StatusMessage kind="error" onRetry={retry} retryAfter={failure.err.retryAfter}>
-          {failure.err.message}
-        </StatusMessage>
-      )}
-      {!loading && !failure && movies.length === 0 && (
-        <StatusMessage kind="empty">No se encontraron películas para «{query}».</StatusMessage>
-      )}
-      {!loading && !failure && page < totalPages && (
-        <button type="button" className="more" onClick={loadMore} disabled={loadingMore}>
-          {loadingMore ? 'Cargando…' : 'Cargar más'}
-        </button>
-      )}
+      {loading && !query && <div className="hero hero--skeleton" aria-hidden="true" />}
+      {!loading && featured && <Hero movie={featured} onSelect={setSelectedId} />}
+
+      <main className="app">
+        <h2 className="section-title">{title}</h2>
+
+        {loading && <SkeletonGrid />}
+        {!loading && gridMovies.length > 0 && (
+          <MovieGrid movies={gridMovies} onSelect={setSelectedId} />
+        )}
+        {failure && (
+          <StatusMessage kind="error" onRetry={retry} retryAfter={failure.err.retryAfter}>
+            {failure.err.message}
+          </StatusMessage>
+        )}
+        {!loading && !failure && movies.length === 0 && (
+          <StatusMessage kind="empty">
+            {query
+              ? `No encontramos «${query}». Prueba con otro título o revisa la ortografía.`
+              : 'No hay películas para mostrar por ahora.'}
+          </StatusMessage>
+        )}
+        {!loading && !failure && page < totalPages && (
+          <button type="button" className="btn btn--outline more" onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? 'Cargando…' : 'Cargar más películas'}
+          </button>
+        )}
+      </main>
+
+      <footer className="footer">
+        <p>
+          Datos e imágenes de{' '}
+          <a href="https://www.themoviedb.org/" target="_blank" rel="noreferrer">
+            The Movie Database (TMDB)
+          </a>
+          . Esta app no está respaldada ni certificada por TMDB.
+        </p>
+      </footer>
+
       {selectedId && <MovieDetail id={selectedId} onClose={() => setSelectedId(null)} />}
-    </main>
+    </>
   );
 }

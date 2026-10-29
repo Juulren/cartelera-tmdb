@@ -46,3 +46,30 @@ body {
 .status {
   padding: 16px;
 }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.search input {
+  width: 100%;
+  max-width: 480px;
+  padding: 10px 12px;
+  font-size: 1rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  margin: 16px 0;
+}
+
+.more {
+  display: block;
+  margin: 24px auto;
+  padding: 10px 20px;
+}

@@ -21,6 +21,26 @@ function sendError(res, status, code, error, extra = {}) {
   res.status(status).json({ code, error, ...extra });
 }
 
+// TMDB falla de vez en cuando (5xx, cortes de red): un GET es seguro de repetir, así que
+// se reintenta una vez antes de rendirse. Cada fallo queda en el log para poder diagnosticarlo.
+async function fetchTmdb(url, path) {
+  const options = () => ({
+    headers: isBearer ? { Authorization: `Bearer ${rawKey}` } : {},
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch(url, options());
+      if (res.status < 500 || attempt === 2) return res;
+      console.error(`[server] TMDB ${path} respondió ${res.status} (intento ${attempt})`);
+    } catch (err) {
+      console.error(`[server] TMDB ${path} falló: ${err.name}: ${err.message} (intento ${attempt})`);
+      if (attempt === 2) throw err;
+    }
+  }
+}
+
 // Llama a TMDB desde el servidor para que la key nunca llegue al navegador.
 async function tmdb(res, path, params = {}) {
   if (!hasKey) {
@@ -33,10 +53,7 @@ async function tmdb(res, path, params = {}) {
   if (!isBearer) url.searchParams.set('api_key', rawKey);
 
   try {
-    const upstream = await fetch(url, {
-      headers: isBearer ? { Authorization: `Bearer ${rawKey}` } : {},
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    const upstream = await fetchTmdb(url, path);
 
     if (upstream.status === 429) {
       const retryAfter = Number(upstream.headers.get('retry-after')) || 10;

@@ -89,7 +89,44 @@ app.get('/api/popular', (req, res) => tmdb(res, '/movie/popular', { page: pageOf
 app.get('/api/search', (req, res) => {
   const query = String(req.query.query ?? '').trim();
   if (!query) return sendError(res, 400, 'bad_request', 'Falta el texto de búsqueda.');
-  tmdb(res, '/search/movie', { query, page: pageOf(req) });
+  const params = { query, page: pageOf(req), include_adult: 'false' };
+  if (/^\d{4}$/.test(req.query.year)) params.primary_release_year = req.query.year;
+  tmdb(res, '/search/movie', params);
+});
+
+// Orden permitido -> filtros extra para que el resultado tenga sentido
+// (sin ellos, "mejor calificadas" se llena de películas con 1 voto).
+const SORTS = {
+  'popularity.desc': {},
+  'vote_average.desc': { 'vote_count.gte': 300 },
+  'primary_release_date.desc': { 'vote_count.gte': 10 },
+  'primary_release_date.asc': { 'vote_count.gte': 50 },
+};
+
+// Catálogo con filtros: ?genres=28,12&year=2020&min_rating=7&sort_by=vote_average.desc&page=2
+app.get('/api/discover', (req, res) => {
+  const sort = Object.hasOwn(SORTS, req.query.sort_by) ? req.query.sort_by : 'popularity.desc';
+  const params = { page: pageOf(req), sort_by: sort, include_adult: 'false', ...SORTS[sort] };
+
+  if (sort === 'primary_release_date.desc') {
+    // Sin esto, lo primero serían estrenos futuros que aún no tienen ni póster.
+    params['primary_release_date.lte'] = new Date().toISOString().slice(0, 10);
+  }
+
+  const genres = String(req.query.genres ?? '')
+    .split(',')
+    .filter((g) => /^\d+$/.test(g));
+  if (genres.length) params.with_genres = genres.join(',');
+
+  if (/^\d{4}$/.test(req.query.year)) params.primary_release_year = req.query.year;
+
+  const minRating = Number(req.query.min_rating);
+  if (minRating >= 1 && minRating <= 9) {
+    params['vote_average.gte'] = minRating;
+    params['vote_count.gte'] = Math.max(params['vote_count.gte'] ?? 0, 50);
+  }
+
+  tmdb(res, '/discover/movie', params);
 });
 
 app.get('/api/movie/:id', (req, res) => {
